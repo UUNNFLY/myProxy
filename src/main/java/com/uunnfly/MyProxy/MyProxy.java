@@ -44,20 +44,27 @@ public class MyProxy {
 
         for(Method method : methods){
 
-            MethodSpec methodSpec = MethodSpec.methodBuilder(method.getName())
+            MethodSpec.Builder methodSpecBuilder = MethodSpec.methodBuilder(method.getName())
                     .addModifiers(Modifier.PUBLIC)
                     .addAnnotation(Override.class)
                     .returns(method.getReturnType())
                     .addCode("try {\n")
-                    .addStatement("\t$T method = " + inf.getName() + ".class.getMethod(\"" + method.getName() + "\")", Method.class)
-                    //写死参数为null
-                    .addStatement("\tthis.handler.invoke(this, method, null)")
+                    .addStatement("\t$T method = " + inf.getName() + ".class.getMethod(\"" + method.getName() + "\")", Method.class);
+            String statement;
+            //写死参数为null
+            String code = "this.handler.invoke(this, method, null)";
+            if(method.getReturnType().getName() == "void")
+                statement = "\t" + code;
+            else
+                statement = "\treturn " + code;
+
+            methodSpecBuilder.addStatement(statement)
                     .addStatement("\t")
                     .addCode("} catch(Exception e) {\n")
                     .addCode("\te.printStackTrace();\n")
-                    .addCode("}\n")
-                    .build();
-            typeSpecBuilder.addMethod(methodSpec);
+                    .addCode("}\n");
+
+            typeSpecBuilder.addMethod(methodSpecBuilder.build());
         }
 
         String path = "./";
